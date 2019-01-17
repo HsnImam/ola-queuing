@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ../partials/head %>
+</head>
+<body class="container">
+
+<header>
+    <% include ../partials/header %>
+</header>
+
+<main>
+<h4 id="notification"></h4>
+<div class="container">
+        <h2>Request Ride</h2>
+        <form class="form-horizontal">
+            <div class="form-group">
+            <label class="control-label col-sm-2" for="customerId">Customer ID:</label>
+            <div class="col-sm-10">
+                <input type="number" min="0"  class="form-control" id="customerId" placeholder="Set ID" name="customerId">
+            </div>
+            </div>
+            <div class="form-group">        
+            <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" class="btn btn-default" onclick="requestRide()">Ride Now</button>
+            </div>
+            </div>
+        </form>
+    </div>
+</main>
+<script type="text/javascript">
+    var socket = io();
+    var customerId = '';
+    
+    function requestRide() {
+        customerId = document.getElementById('customerId').value;
+        
+        if(!customerId) {
+            alert('Please provide customer ID');
+            return false;
+        }
+        
+        socket.emit('join', {customerId: customerId}); //Join a room, roomname is the userId itself!
+        socket.emit('request-for-ride', customerId);
+        document.getElementById('customerId').value = "";
+    }
+
+    //Listen for a 'request-accepted' event
+    socket.on('request-accepted', function(data) {
+        driverDetails = data; 
+        document.getElementById("notification").innerHTML = "Your Ride has been accepted \n" + JSON.stringify(driverDetails);
+    });
+</script>
+
+<footer>
+    <% include ../partials/footer %>
+</footer>
+
+</body>
+</html>

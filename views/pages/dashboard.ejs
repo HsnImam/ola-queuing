@@ -1,0 +1,42 @@
+<html lang="en">
+<head>
+    <% include ../partials/head %>
+</head>
+<body class="container">
+
+<header>
+    <% include ../partials/header %>
+</header>
+
+<main>
+    <div style="width:100%">
+            <button class="btn btn-primary pull-right"><span class="glyphicon glyphicon-refresh"></span> Refresh</button>
+    </div>
+    <table class="table table-bordered table-striped">
+        <thead class="thead-light">
+          <tr>
+            <th scope="col">Request ID</th>
+            <th scope="col">Customer ID</th>
+            <th scope="col">Time Elapsed</th>
+            <th scope="col">Status</th>
+            <th scope="col">Driver</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">12301</th>
+            <td>3452</td>
+            <td>45 sec</td>
+            <td>Waiting</td>
+            <td>None</td>
+          </tr>
+        </tbody>
+    </table>
+</main>
+
+<footer>
+    <% include ../partials/footer %>
+</footer>
+
+</body>
+</html>

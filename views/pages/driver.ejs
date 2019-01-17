@@ -1,0 +1,83 @@
+<html lang="en">
+<head>
+    <% include ../partials/head %>
+</head>
+<body class="container">
+
+<header>
+    <% include ../partials/header %>
+</header>
+
+<main>
+    <div style="width:100%">
+            <button class="btn btn-primary pull-right"><span class="glyphicon glyphicon-refresh"></span> Refresh</button>
+    </div>
+    <table class="table table-bordered table-striped">
+        <thead class="thead-light">
+          <tr>
+            <th scope="col">Waiting</th>
+            <th scope="col">Ongoing</th>
+            <th scope="col">Complete</th>
+          </tr>
+        </thead>
+        <tbody id='data'>
+          <tr>
+            <td id='waiting'></td>
+            <td id='ongoing'></td>
+            <td id='complete'></td>
+          </tr>
+        </tbody>
+    </table>
+</main>
+<script type="text/javascript">
+    var socket = io();
+    var driver = new URLSearchParams(window.location.href);
+    
+    var driverId = decodeURI(window.location.search)
+        .replace('?', '')
+        .split('&')
+        .map(param => param.split('='))
+        .reduce((values, [ key, value ]) => {
+            values[key ] = value
+            return values
+        }, {}).id;
+    
+    socket.emit('join', {customerId: driverId});
+
+    
+    socket.on("request-for-ride", function(eventData){
+        requestDetails = eventData; 
+        $('#data #waiting').append(`<div>Request ID : ${requestDetails.requestId},<br />
+                Customer ID: ${requestDetails.customerId},
+                <br />
+                Time: ${requestDetails.requestTime}
+                <br />
+                <button class="btn btn-primary" data-requestid=${requestDetails.requestId}>Select</button>
+                </div>`);
+    });
+
+    $('#data').on('click', 'button', function(){
+        var requestId = $(event.target).data('requestid');
+        socket.emit('ride-accepted', requestId);
+        
+        $(event.target).parent().remove();
+    });
+
+    socket.on("ride-accepted", function(eventData){
+        requestDetails = eventData; 
+        $('#data #ongoing').append(`<div>Request ID : ${requestDetails.requestId},<br />
+                Customer ID: ${requestDetails.customerId},
+                <br />
+                Time: ${requestDetails.requestTime}
+                <br />
+                Picked Up: ${requestDetails.pickedUp}
+                </div>`);
+    });
+</script>
+
+<footer>
+    <% include ../partials/footer %>
+</footer>
+
+</body>
+</html>
