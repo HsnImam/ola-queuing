@@ -39,7 +39,12 @@
             alert('Please provide customer ID');
             return false;
         }
-        
+
+        if(+customerId <= 5) {
+            alert('Invalid Customer Id');
+            return false;
+        }
+       
         socket.emit('join', {customerId: customerId}); //Join a room, roomname is the userId itself!
         socket.emit('request-for-ride', customerId);
         document.getElementById('customerId').value = "";

@@ -10,7 +10,9 @@
 
 <main>
     <div style="width:100%">
-            <button class="btn btn-primary pull-right"><span class="glyphicon glyphicon-refresh"></span> Refresh</button>
+        <button class="btn btn-primary pull-right" onclick="getData()">
+            <span class="glyphicon glyphicon-refresh"></span> Refresh
+        </button>
     </div>
     <table class="table table-bordered table-striped">
         <thead class="thead-light">
@@ -44,34 +46,101 @@
     
     socket.emit('join', {customerId: driverId});
 
-    
-    socket.on("request-for-ride", function(eventData){
-        requestDetails = eventData; 
-        $('#data #waiting').append(`<div>Request ID : ${requestDetails.requestId},<br />
-                Customer ID: ${requestDetails.customerId},
-                <br />
-                Time: ${requestDetails.requestTime}
-                <br />
-                <button class="btn btn-primary" data-requestid=${requestDetails.requestId}>Select</button>
+    function bindWaitingRide(ride) {
+        $('#data #waiting').append(`
+                <div>Request ID : ${ride.requestId},<br />
+                    Customer ID: ${ride.customerId},
+                    <br />
+                    Time: ${moment(ride.requestTime).fromNow()}
+                    <br />
+                    <button class="btn btn-primary" data-requestid=${ride.requestId}>Select</button>
                 </div>`);
+    }
+
+    function bindOngoingRide(ride) {
+        $('#data #ongoing').append(`
+                <div>Request ID : ${ride.requestId},<br />
+                    Customer ID: ${ride.customerId},
+                    <br />
+                    Request Time: ${moment(ride.requestTime).fromNow()}
+                    <br />
+                    Picked Up Time: ${moment(ride.pickedUp).fromNow()}
+                    <br />
+                    <button class="btn btn-primary" data-requestid=${ride.requestId}>End Ride</button>
+                </div>`);
+    }
+
+    function bindCompleteRide(ride) {
+        let duration = moment(ride.completeTime).diff(moment(ride.pickedUp), 'minutes');
+        $('#data #complete').append(`
+                <div>Request ID : ${ride.requestId},<br />
+                    Customer ID: ${ride.customerId},
+                    <br />
+                    Request Time: ${moment(ride.requestTime).fromNow()}
+                    <br />
+                    <br />
+                    Picked Up Time: ${moment(ride.pickedUp).fromNow()}
+                    <br />
+                    Duration: ${ moment.duration(duration,'minutes').humanize()}
+                </div>`);
+    }
+
+    function bindData(rides) {
+        $('#data #waiting').empty();
+        $('#data #ongoing').empty();
+        $('#data #complete').empty();
+        
+        if(rides && rides.length) {
+            var driverRide = rides.reduce((r,ride) => {
+                r[ride.status].push(ride);
+                return r;
+            },{'Waiting' : [], 'Ongoing' : [], 'Complete': []});
+           
+            driverRide.Waiting.forEach(function(ride){
+                bindWaitingRide(ride)
+            });
+            driverRide.Ongoing.forEach(function(ride){
+                bindOngoingRide(ride)
+            });
+            driverRide.Complete.forEach(function(ride){
+                bindCompleteRide(ride)
+            });
+           
+        }
+    }
+    
+    socket.on("request-for-ride", function(ride){ 
+        bindWaitingRide(ride);
     });
 
-    $('#data').on('click', 'button', function(){
+    $('#data #waiting').on('click', 'button', function(){
         var requestId = $(event.target).data('requestid');
-        socket.emit('ride-accepted', requestId);
-        
+        socket.emit('ride-accepted', {requestId, driverId});    
         $(event.target).parent().remove();
     });
 
-    socket.on("ride-accepted", function(eventData){
-        requestDetails = eventData; 
-        $('#data #ongoing').append(`<div>Request ID : ${requestDetails.requestId},<br />
-                Customer ID: ${requestDetails.customerId},
-                <br />
-                Time: ${requestDetails.requestTime}
-                <br />
-                Picked Up: ${requestDetails.pickedUp}
-                </div>`);
+    $('#data #ongoing').on('click', 'button', function(){
+        var requestId = $(event.target).data('requestid');
+        socket.emit('ride-end', {requestId, driverId});    
+        $(event.target).parent().remove();
+    });
+
+    socket.on("ride-accepted", function(ride){
+       getData();
+    });
+
+    socket.on("ride-end", function(ride){
+       getData();
+    });
+
+    function getData() {
+        $.get(`/api/driverdata?driverId=${driverId}`, function( rides ) {
+            bindData(rides);
+        });
+    }
+
+    $(document).ready(function () {
+        getData();
     });
 </script>
 

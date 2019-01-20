@@ -10,7 +10,9 @@
 
 <main>
     <div style="width:100%">
-            <button class="btn btn-primary pull-right"><span class="glyphicon glyphicon-refresh"></span> Refresh</button>
+            <button class="btn btn-primary pull-right" onclick="getData()">
+                <span class="glyphicon glyphicon-refresh"></span> Refresh
+            </button>
     </div>
     <table class="table table-bordered table-striped">
         <thead class="thead-light">
@@ -22,16 +24,56 @@
             <th scope="col">Driver</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <th scope="row">12301</th>
-            <td>3452</td>
-            <td>45 sec</td>
-            <td>Waiting</td>
-            <td>None</td>
-          </tr>
+        <tbody id='data'>
         </tbody>
     </table>
+    <script>
+        var socket = io();
+        socket.emit('join', {customerId: 'dashboard'});
+
+        function bindData(rides) {
+            $('#data').empty();
+            rides.forEach(ride => {
+                $('#data').append(`
+                    <tr>
+                        <td>${ride.requestId}</td>
+                        <td>${ride.customerId}</td>
+                        <td>${moment(ride.requestTime).fromNow()}</td>
+                        <td>${ride.status}</td>
+                        <td>${ride.driverId || 'None'}</td>
+                    </tr>
+                `); 
+            });
+        }
+
+        function getData() {
+            $.get( "/api/ridedata", function( data ) {
+                bindData(data);
+            });
+        }
+
+        $(document).ready(function () {
+            $.get( "/api/ridedata", function( data ) {
+                bindData(data);
+            });
+        });
+
+        socket.on("request-for-ride", function(ride){
+            $('#data').append(`
+                    <tr>
+                        <td>${ride.requestId}</td>
+                        <td>${ride.customerId}</td>
+                        <td>${moment(ride.requestTime).fromNow()}</td>
+                        <td>${ride.status}</td>
+                        <td>${ride.driverId || 'None'}</td>
+                    </tr>
+            `);
+        });
+
+        socket.on("ride-accepted", function(rides){
+            bindData(rides);
+        });
+    </script>
 </main>
 
 <footer>
