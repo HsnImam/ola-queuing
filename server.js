@@ -10,7 +10,7 @@ var routes = require('./routes');
 var server = http.Server(app);
 var portNumber = 8080; 
 
-server.listen(portNumber);
+server.listen(process.env.PORT || portNumber);
 
 var io = socket(server);
 
