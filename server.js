@@ -17,6 +17,15 @@ var io = socket(server);
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: false }))
 
+app.get('/', function(req, res) {
+    res.render('pages/customer');
+});
+
+
+app.get('/customerapp.html', function(req, res) {
+    res.render('pages/customer');
+});
+
 app.get('/driverapp.html', function(req, res) {
     res.render('pages/driver');
 });
@@ -57,10 +66,6 @@ app.get('/api/driverdata', function(req, res) {
 
         return res.send(driverRides);
     });
-});
-
-app.get('/customerapp.html', function(req, res) {
-    res.render('pages/customer');
 });
 
 io.on('connection', function(socket) { //Listen on the 'connection' event for incoming sockets
